@@ -1,0 +1,160 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/game.gd" id="game"]
+[ext_resource type="Script" path="res://scripts/core/pool.gd" id="pool"]
+[ext_resource type="Script" path="res://scripts/world/difficulty.gd" id="difficulty"]
+[ext_resource type="Script" path="res://scripts/world/enemy_spawner.gd" id="enemy_spawner"]
+[ext_resource type="Script" path="res://scripts/world/boss_spawner.gd" id="boss_spawner"]
+[ext_resource type="Script" path="res://scripts/world/pickup_spawner.gd" id="pickup_spawner"]
+[ext_resource type="Script" path="res://scripts/world/score_keeper.gd" id="score_keeper"]
+[ext_resource type="Script" path="res://scripts/world/fx.gd" id="fx"]
+[ext_resource type="Script" path="res://scripts/world/audio_manager.gd" id="audio_manager"]
+[ext_resource type="Script" path="res://scripts/world/camera_shake.gd" id="camera"]
+[ext_resource type="Script" path="res://scripts/weapons/chain_lightning.gd" id="chain"]
+[ext_resource type="Script" path="res://scripts/weapons/area_blast.gd" id="blast"]
+[ext_resource type="PackedScene" path="res://scenes/space_background.tscn" id="background"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="player"]
+[ext_resource type="PackedScene" path="res://scenes/bullet.tscn" id="bullet"]
+[ext_resource type="PackedScene" path="res://scenes/scout.tscn" id="scout"]
+[ext_resource type="PackedScene" path="res://scenes/fighter.tscn" id="fighter"]
+[ext_resource type="PackedScene" path="res://scenes/boss.tscn" id="boss"]
+[ext_resource type="PackedScene" path="res://scenes/pickup.tscn" id="pickup"]
+[ext_resource type="PackedScene" path="res://scenes/popup_text.tscn" id="popup"]
+[ext_resource type="PackedScene" path="res://scenes/hit_fx.tscn" id="hit_fx"]
+[ext_resource type="PackedScene" path="res://scenes/explosion_fx.tscn" id="explosion_fx"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="hud"]
+[ext_resource type="PackedScene" path="res://scenes/overlay_screen.tscn" id="overlay"]
+[ext_resource type="SpriteFrames" path="res://resources/frames/explosion.tres" id="explosion"]
+[ext_resource type="LabelSettings" path="res://resources/ui/danger_label.tres" id="danger_style"]
+[ext_resource type="AudioStream" path="res://assets/audio/bgSound.mp3" id="music"]
+[ext_resource type="AudioStream" path="res://assets/audio/explosion.wav" id="explosion_sound"]
+[ext_resource type="AudioStream" path="res://assets/audio/hit.wav" id="hit_sound"]
+[ext_resource type="AudioStream" path="res://assets/audio/shot_1.wav" id="shot_sound"]
+[ext_resource type="AudioStream" path="res://assets/audio/shot_2.wav" id="pickup_sound"]
+
+[sub_resource type="CanvasItemMaterial" id="add"]
+blend_mode = 1
+
+[node name="Game" type="Node2D" node_paths=PackedStringArray("game_over_screen", "level_end_screen", "pause_screen")]
+script = ExtResource("game")
+game_over_screen = NodePath("GameOver")
+level_end_screen = NodePath("LevelEnd")
+pause_screen = NodePath("Pause")
+
+[node name="Background" parent="." instance=ExtResource("background")]
+
+[node name="Difficulty" type="Node" parent="." groups=["difficulty"]]
+script = ExtResource("difficulty")
+
+[node name="Bullets" type="Node" parent="." groups=["bullets"]]
+script = ExtResource("pool")
+scene = ExtResource("bullet")
+prewarm = 120
+
+[node name="Player" parent="." instance=ExtResource("player")]
+
+[node name="ScoutSpawner" type="Node" parent="."]
+script = ExtResource("enemy_spawner")
+kind = "scout"
+
+[node name="Pool" type="Node" parent="ScoutSpawner"]
+script = ExtResource("pool")
+scene = ExtResource("scout")
+prewarm = 8
+
+[node name="FighterSpawner" type="Node" parent="."]
+script = ExtResource("enemy_spawner")
+kind = "fighter"
+
+[node name="Pool" type="Node" parent="FighterSpawner"]
+script = ExtResource("pool")
+scene = ExtResource("fighter")
+prewarm = 6
+
+[node name="BossSpawner" type="Node" parent="."]
+script = ExtResource("boss_spawner")
+boss_scene = ExtResource("boss")
+
+[node name="PickupSpawner" type="Node" parent="."]
+script = ExtResource("pickup_spawner")
+
+[node name="Pool" type="Node" parent="PickupSpawner"]
+script = ExtResource("pool")
+scene = ExtResource("pickup")
+prewarm = 8
+
+[node name="ScoreKeeper" type="Node" parent="."]
+script = ExtResource("score_keeper")
+
+[node name="Popups" type="Node" parent="ScoreKeeper" groups=["popups"]]
+script = ExtResource("pool")
+scene = ExtResource("popup")
+prewarm = 8
+
+[node name="Fx" type="Node" parent="." groups=["fx"]]
+script = ExtResource("fx")
+player_destroy_frames = ExtResource("explosion")
+
+[node name="Explosions" type="Node" parent="Fx"]
+script = ExtResource("pool")
+scene = ExtResource("explosion_fx")
+prewarm = 8
+
+[node name="Hits" type="Node" parent="Fx"]
+script = ExtResource("pool")
+scene = ExtResource("hit_fx")
+prewarm = 12
+
+[node name="ChainLightning" type="Node2D" parent="."]
+z_index = 4
+material = SubResource("add")
+script = ExtResource("chain")
+
+[node name="AreaBlast" type="Node" parent="."]
+script = ExtResource("blast")
+
+[node name="Audio" type="Node" parent="."]
+script = ExtResource("audio_manager")
+
+[node name="Music" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("music")
+
+[node name="Explosion" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("explosion_sound")
+max_polyphony = 8
+
+[node name="BossExplosion" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("explosion_sound")
+max_polyphony = 8
+
+[node name="Hit" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("hit_sound")
+max_polyphony = 8
+
+[node name="Shot" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("shot_sound")
+max_polyphony = 8
+
+[node name="Pickup" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("pickup_sound")
+max_polyphony = 8
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(225, 320)
+script = ExtResource("camera")
+
+[node name="Hud" parent="." instance=ExtResource("hud")]
+
+[node name="GameOver" parent="." instance=ExtResource("overlay")]
+title = "GAME OVER"
+hint = "PRESS ENTER TO RESTART"
+title_style = ExtResource("danger_style")
+
+[node name="LevelEnd" parent="." instance=ExtResource("overlay")]
+title = "LEVEL COMPLETE"
+hint = "PRESS ENTER TO RESTART"
+
+[node name="Pause" parent="." instance=ExtResource("overlay")]
+title = "PAUSED"
+restart = false
+dim_alpha = 0.5

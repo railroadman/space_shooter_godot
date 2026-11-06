@@ -1,0 +1,152 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/start_screen.gd" id="script"]
+[ext_resource type="PackedScene" path="res://scenes/space_background.tscn" id="background"]
+[ext_resource type="Texture2D" path="res://assets/images/foozle/ship.png" id="ship"]
+[ext_resource type="Texture2D" path="res://assets/images/foozle/ship_engine.png" id="engine"]
+[ext_resource type="SpriteFrames" path="res://resources/frames/ship_thruster.tres" id="thruster"]
+[ext_resource type="LabelSettings" path="res://resources/ui/title_label.tres" id="title_style"]
+[ext_resource type="LabelSettings" path="res://resources/ui/body_label.tres" id="body_style"]
+[ext_resource type="LabelSettings" path="res://resources/ui/score_label.tres" id="accent_style"]
+
+[sub_resource type="CanvasItemMaterial" id="add"]
+blend_mode = 1
+
+[sub_resource type="Animation" id="blink"]
+resource_name = "blink"
+length = 1.2
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Prompt:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.6, 1.2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0.2), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="hover"]
+resource_name = "hover"
+length = 3.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Ship:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1.5, 3),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(225, 400), Vector2(225, 382), Vector2(225, 400)]
+}
+
+[sub_resource type="AnimationLibrary" id="blink_lib"]
+_data = {
+&"blink": SubResource("blink")
+}
+
+[sub_resource type="AnimationLibrary" id="hover_lib"]
+_data = {
+&"hover": SubResource("hover")
+}
+
+[node name="StartScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("script")
+
+[node name="Background" parent="." instance=ExtResource("background")]
+
+[node name="Ship" type="Node2D" parent="."]
+position = Vector2(225, 400)
+scale = Vector2(2, 2)
+
+[node name="Thruster" type="AnimatedSprite2D" parent="Ship"]
+material = SubResource("add")
+texture_filter = 1
+sprite_frames = ExtResource("thruster")
+autoplay = &"default"
+
+[node name="Engine" type="Sprite2D" parent="Ship"]
+texture_filter = 1
+texture = ExtResource("engine")
+
+[node name="Body" type="Sprite2D" parent="Ship"]
+texture_filter = 1
+texture = ExtResource("ship")
+hframes = 4
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -220.0
+offset_top = 90.0
+offset_right = 220.0
+offset_bottom = 230.0
+grow_horizontal = 2
+mouse_filter = 2
+label_settings = ExtResource("title_style")
+text = "SPACE\nSHOOTER"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Prompt" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = -130.0
+offset_right = 220.0
+offset_bottom = -100.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+label_settings = ExtResource("accent_style")
+text = "PRESS ENTER TO START"
+horizontal_alignment = 1
+
+[node name="Controls" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = -80.0
+offset_right = 220.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+label_settings = ExtResource("body_style")
+text = "ARROWS / WASD  -  MOVE\nSPACE  -  FIRE        ESC  -  PAUSE"
+horizontal_alignment = 1
+
+[node name="Blink" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("blink_lib")
+}
+autoplay = "blink"
+
+[node name="Hover" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("hover_lib")
+}
+autoplay = "hover"

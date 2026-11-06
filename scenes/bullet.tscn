@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/bullet.gd" id="script"]
+[ext_resource type="SpriteFrames" path="res://resources/frames/bullet.tres" id="frames"]
+
+[sub_resource type="CanvasItemMaterial" id="add"]
+blend_mode = 1
+
+[sub_resource type="RectangleShape2D" id="shape"]
+size = Vector2(14, 18)
+
+[node name="Bullet" type="Area2D"]
+collision_layer = 0
+collision_mask = 0
+script = ExtResource("script")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+material = SubResource("add")
+
+[node name="Anim" type="AnimatedSprite2D" parent="."]
+material = SubResource("add")
+sprite_frames = ExtResource("frames")
+autoplay = &"default"
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+shape = SubResource("shape")

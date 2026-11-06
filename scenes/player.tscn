@@ -1,0 +1,63 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/player.gd" id="player"]
+[ext_resource type="Script" path="res://scripts/weapons/weapon.gd" id="weapon"]
+[ext_resource type="Script" path="res://scripts/weapons/loadout.gd" id="loadout"]
+[ext_resource type="Script" path="res://scripts/actors/shield_effect.gd" id="shield"]
+[ext_resource type="Texture2D" path="res://assets/images/foozle/ship.png" id="ship"]
+[ext_resource type="Texture2D" path="res://assets/images/foozle/ship_engine.png" id="engine"]
+[ext_resource type="SpriteFrames" path="res://resources/frames/ship_thruster.tres" id="thruster"]
+[ext_resource type="Shader" path="res://shaders/flash_fill.gdshader" id="flash"]
+
+[sub_resource type="CanvasItemMaterial" id="add"]
+blend_mode = 1
+
+[sub_resource type="ShaderMaterial" id="flash_mat"]
+shader = ExtResource("flash")
+shader_parameter/fill_color = Color(1, 0.23, 0.23, 1)
+shader_parameter/amount = 0.0
+
+[sub_resource type="RectangleShape2D" id="shape"]
+size = Vector2(24, 24)
+
+[node name="Player" type="Area2D" groups=["player"]]
+z_index = 2
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("player")
+
+[node name="Thruster" type="AnimatedSprite2D" parent="."]
+material = SubResource("add")
+texture_filter = 1
+sprite_frames = ExtResource("thruster")
+autoplay = &"default"
+
+[node name="Engine" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("engine")
+
+[node name="Ship" type="Sprite2D" parent="."]
+texture_filter = 1
+material = SubResource("flash_mat")
+texture = ExtResource("ship")
+hframes = 4
+
+[node name="Shield" type="Node2D" parent="."]
+material = SubResource("add")
+script = ExtResource("shield")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+shape = SubResource("shape")
+
+[node name="MainWeapon" type="Node" parent="."]
+script = ExtResource("weapon")
+friendly = true
+
+[node name="SecondaryWeapon" type="Node" parent="."]
+script = ExtResource("weapon")
+friendly = true
+
+[node name="Loadout" type="Node" parent="." node_paths=PackedStringArray("main_weapon", "secondary_weapon")]
+script = ExtResource("loadout")
+main_weapon = NodePath("../MainWeapon")
+secondary_weapon = NodePath("../SecondaryWeapon")

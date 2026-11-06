@@ -1,0 +1,32 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://31abl5spa18n"]
+
+[ext_resource type="Texture2D" uid="uid://cvsovwd8fmx6h" path="res://assets/images/foozle/ship_engine_thruster.png" id="1"]
+
+[sub_resource type="AtlasTexture" id="f0"]
+atlas = ExtResource("1")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="f1"]
+atlas = ExtResource("1")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="f2"]
+atlas = ExtResource("1")
+region = Rect2(96, 0, 48, 48)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("f0")
+}, {
+"duration": 1.0,
+"texture": SubResource("f1")
+}, {
+"duration": 1.0,
+"texture": SubResource("f2")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 12.0
+}]

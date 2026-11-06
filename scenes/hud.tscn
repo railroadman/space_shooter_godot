@@ -1,0 +1,122 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="hud"]
+[ext_resource type="Script" path="res://scripts/ui/ghost_bar.gd" id="bar"]
+[ext_resource type="Script" path="res://scripts/ui/weapon_slot.gd" id="slot"]
+[ext_resource type="Texture2D" path="res://assets/images/foozle/ship.png" id="ship"]
+[ext_resource type="LabelSettings" path="res://resources/ui/score_label.tres" id="score_style"]
+[ext_resource type="LabelSettings" path="res://resources/ui/body_label.tres" id="body_style"]
+[ext_resource type="LabelSettings" path="res://resources/ui/danger_label.tres" id="danger_style"]
+
+[sub_resource type="AtlasTexture" id="life_icon"]
+atlas = ExtResource("ship")
+region = Rect2(0, 0, 48, 48)
+
+[node name="Hud" type="CanvasLayer"]
+script = ExtResource("hud")
+life_icon = SubResource("life_icon")
+
+[node name="Score" type="Label" parent="."]
+unique_name_in_owner = true
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -165.0
+offset_top = 12.0
+offset_right = -15.0
+offset_bottom = 42.0
+grow_horizontal = 0
+mouse_filter = 2
+label_settings = ExtResource("score_style")
+text = "000000"
+horizontal_alignment = 2
+
+[node name="Timer" type="Label" parent="."]
+unique_name_in_owner = true
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -50.0
+offset_top = 12.0
+offset_right = 50.0
+offset_bottom = 38.0
+grow_horizontal = 2
+mouse_filter = 2
+label_settings = ExtResource("body_style")
+text = "0:00"
+horizontal_alignment = 1
+
+[node name="BottomLeft" type="VBoxContainer" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = -130.0
+offset_right = 250.0
+offset_bottom = -10.0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 2
+
+[node name="SecondarySlot" type="Control" parent="BottomLeft"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("slot")
+slot = "secondary"
+
+[node name="Icon" type="TextureRect" parent="BottomLeft/SecondarySlot"]
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="MainSlot" type="Control" parent="BottomLeft"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("slot")
+
+[node name="Icon" type="TextureRect" parent="BottomLeft/MainSlot"]
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="LivesRow" type="HBoxContainer" parent="BottomLeft"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Lives" type="HBoxContainer" parent="BottomLeft/LivesRow"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = -9
+
+[node name="HealthBar" type="Control" parent="BottomLeft/LivesRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(90, 6)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("bar")
+color_by_health = true
+
+[node name="Warning" type="Label" parent="."]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.3
+anchor_right = 0.5
+anchor_bottom = 0.3
+offset_left = -150.0
+offset_top = -30.0
+offset_right = 150.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+label_settings = ExtResource("danger_style")
+text = "WARNING"
+horizontal_alignment = 1
+vertical_alignment = 1

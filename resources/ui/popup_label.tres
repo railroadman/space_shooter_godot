@@ -1,0 +1,11 @@
+[gd_resource type="LabelSettings" load_steps=2 format=3]
+
+[ext_resource type="FontVariation" path="res://resources/ui/orbitron_bold.tres" id="1"]
+
+[resource]
+font = ExtResource("1")
+font_size = 16
+font_color = Color(1.0000, 0.8235, 0.3098, 1)
+outline_size = 3
+outline_color = Color(0.0157, 0.0627, 0.1098, 1)
+shadow_size = 0
