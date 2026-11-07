@@ -29,10 +29,10 @@ func setup(at: Vector2, kind: String, type: String) -> void:
 func _physics_process(delta: float) -> void:
 	var config := Config.PICKUP
 	_age += delta * 1000.0
-	if _age >= config.lifetime or position.y > Config.WORLD.y + Config.DESPAWN_MARGIN_Y:
+	if _age >= config.lifetime:
 		pool.release(self)
 		return
-	position.y += config.fall_speed * delta
+	# the box stays where the enemy died
 	_sprite.rotation += deg_to_rad(config.spin_speed) * delta
 	_sprite.scale = Vector2.ONE * config.scale * (1.0 + config.pulse_amount * sin(_age / config.pulse_period * TAU))
 	var is_blink_hidden: bool = _age > config.lifetime - config.blink_time and int(_age / config.blink_interval) % 2 == 1

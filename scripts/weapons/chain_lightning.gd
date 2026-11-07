@@ -54,7 +54,7 @@ func _on_bullet_hit(hit: Dictionary) -> void:
 func _nearest_unvisited(from: Node2D, visited: Array[Node2D], radius: float) -> Node2D:
 	var nearest: Node2D
 	var nearest_distance := radius
-	var screen := Rect2(Vector2.ZERO, Config.WORLD)
+	var screen := Config.view_rect()
 	for enemy: Node2D in get_tree().get_nodes_in_group("enemies"):
 		if enemy in visited or not enemy.is_alive() or not screen.has_point(enemy.global_position):
 			continue

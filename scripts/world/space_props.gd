@@ -1,7 +1,8 @@
 class_name SpaceProps
 extends Node2D
-## Nebula clouds and planets that drift down the screen and fade in and out. The Sprite2D children are the pool;
-## a planet is never picked twice in a row and never overlaps another planet.
+## Nebula clouds and planets that float across the endless space and fade in and out. The Sprite2D children are the
+## pool; they appear on a ring around the camera and cross toward it. A planet is never picked twice in a row and
+## never overlaps another planet.
 
 ## Cloud textures; planets are loaded from Config.PLANET_NAMES.
 @export var nebulae: Array[Texture2D] = []
@@ -12,11 +13,14 @@ const NEBULA_SCALE := Vector2(1.6, 2.8)
 const PLANET_SCALE := Vector2(0.35, 0.8)
 const NEBULA_ALPHA := 0.45
 const PLANET_ALPHA := 0.95
+const FADE_IN_TIME := 3.0 # seconds
+const AIM_SPREAD := 0.5 # rad, how far a prop's course may miss the camera
 
 var _spawn_in := Config.PROP_FIRST_SPAWN # ms
 var _last_texture: Texture2D
 var _planets: Array[Texture2D] = []
-var _speeds: Dictionary = {} # Sprite2D -> px/s
+var _velocities: Dictionary = {} # Sprite2D -> px/s
+var _ages: Dictionary = {} # Sprite2D -> seconds since it appeared
 var _alphas: Dictionary = {} # Sprite2D -> opacity at full visibility
 var _is_planet: Dictionary = {} # Sprite2D -> bool
 
@@ -28,21 +32,23 @@ func _ready() -> void:
 		prop.visible = false
 
 
-func advance(delta: float, speed_multiplier: float) -> void:
+func advance(delta: float) -> void:
 	_spawn_in -= delta * 1000.0
 	if _spawn_in <= 0.0:
 		_spawn_in = Config.PROP_SPAWN_INTERVAL * randf_range(0.7, 1.3) if _spawn() else Config.PROP_RETRY_DELAY
-	var fade := Config.PROP_FADE_DISTANCE
+	var center := Config.view_center()
 	for prop: Sprite2D in get_children():
 		if not prop.visible:
 			continue
-		prop.position.y += _speeds[prop] * speed_multiplier * delta
-		var half := _half_height(prop)
-		if prop.position.y - half > Config.WORLD.y:
+		var far := _ring_radius() + _half_height(prop) * 2.0 # gone when it left the view on the far side
+		prop.position += _velocities[prop] * delta
+		_ages[prop] += delta
+		var distance := prop.position.distance_to(center)
+		if distance > far:
 			prop.visible = false
 			continue
-		var fade_in := clampf((prop.position.y + half) / fade, 0.0, 1.0)
-		var fade_out := clampf((Config.WORLD.y - (prop.position.y - half)) / fade, 0.0, 1.0)
+		var fade_in := clampf(_ages[prop] / FADE_IN_TIME, 0.0, 1.0)
+		var fade_out := clampf((far - distance) / Config.PROP_FADE_DISTANCE, 0.0, 1.0)
 		prop.modulate.a = _alphas[prop] * minf(fade_in, fade_out)
 
 
@@ -54,22 +60,18 @@ func _spawn() -> bool:
 	var texture := _pick_texture()
 	var is_planet := _planets.has(texture)
 	var scale_range := PLANET_SCALE if is_planet else NEBULA_SCALE
-	var speed := randf_range(Config.PROP_SPEED.x, Config.PROP_SPEED.y)
 	prop.texture = texture
 	prop.scale = Vector2.ONE * randf_range(scale_range.x, scale_range.y)
 	prop.rotation_degrees = randf() * 360.0
-	var x := randf_range(-Config.WORLD.x * 0.1, Config.WORLD.x * 1.1)
-	if is_planet:
-		var place := _find_planet_place(prop, speed)
-		if place.is_empty():
-			return false
-		x = place.x
-		speed = place.speed
+	var place := _find_place(prop, is_planet)
+	if place.is_empty():
+		return false
 	_last_texture = texture
-	_speeds[prop] = speed
+	_velocities[prop] = place.velocity
+	_ages[prop] = 0.0
 	_alphas[prop] = PLANET_ALPHA if is_planet else NEBULA_ALPHA
 	_is_planet[prop] = is_planet
-	prop.position = Vector2(x, -_half_height(prop))
+	prop.position = place.position
 	prop.modulate.a = 0.0
 	prop.visible = true
 	return true
@@ -107,27 +109,33 @@ func _weighted_index(weights: Array[float]) -> int:
 	return weights.size() - 1
 
 
-## A planet needs a spot clear of the other planets. If it starts above one in the same column it drifts no faster
-## than that one, so they never touch. Returns {x, speed} or an empty dictionary.
-func _find_planet_place(planet: Sprite2D, speed: float) -> Dictionary:
-	var gap := Config.PROP_PLANET_GAP
-	var radius := _half_height(planet)
+## A spot on the ring around the camera with a course across the view. A planet needs a spot clear of the other
+## planets. Returns {position, velocity} or an empty dictionary.
+func _find_place(prop: Sprite2D, is_planet: bool) -> Dictionary:
+	var center := Config.view_center()
+	var radius := _half_height(prop)
 	for attempt in 8:
-		var x := randf_range(-Config.WORLD.x * 0.1, Config.WORLD.x * 1.1)
-		var limit := speed
-		var fits := true
-		for other: Sprite2D in get_children():
-			if other == planet or not other.visible or not _is_planet[other]:
-				continue
-			if absf(other.position.x - x) >= radius + _half_height(other) + gap:
-				continue
-			if other.position.y - _half_height(other) < radius + gap:
-				fits = false
-				break
-			limit = minf(limit, _speeds[other])
-		if fits:
-			return {"x": x, "speed": limit}
+		var angle := randf() * TAU
+		var spot := center + Vector2.from_angle(angle) * (_ring_radius() + radius)
+		if is_planet and _touches_planet(prop, spot, radius):
+			continue
+		var course := (center - spot).normalized().rotated(randf_range(-AIM_SPREAD, AIM_SPREAD))
+		return {"position": spot, "velocity": course * randf_range(Config.PROP_SPEED.x, Config.PROP_SPEED.y)}
 	return {}
+
+
+func _touches_planet(planet: Sprite2D, spot: Vector2, radius: float) -> bool:
+	for other: Sprite2D in get_children():
+		if other == planet or not other.visible or not _is_planet[other]:
+			continue
+		if other.position.distance_to(spot) < radius + _half_height(other) + Config.PROP_PLANET_GAP:
+			return true
+	return false
+
+
+## Radius of the ring props appear on: the screen corners.
+func _ring_radius() -> float:
+	return Config.view_size().length() / 2.0
 
 
 func _half_height(prop: Sprite2D) -> float:

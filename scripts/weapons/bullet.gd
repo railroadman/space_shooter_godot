@@ -32,7 +32,7 @@ func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 
 
-## `angle_deg` is the angle from straight ahead; the sign of `config.speed` gives the flight direction (< 0 = down).
+## `angle_deg` is the flight direction in degrees clockwise from straight up (world space); `config.speed` is its magnitude.
 func fire(config: Dictionary, pos: Vector2, angle_deg: float, muzzle: Dictionary, friendly: bool, shooter: Node) -> void:
 	source = shooter
 	var angle := deg_to_rad(angle_deg)
@@ -40,7 +40,7 @@ func fire(config: Dictionary, pos: Vector2, angle_deg: float, muzzle: Dictionary
 	var scale_factor: float = muzzle.get("scale", config.get("scale", Config.BULLET_DEFAULT_SCALE))
 	var flip: bool = config.get("flip_y", false)
 	global_position = pos
-	velocity = Vector2(sin(angle) * absf(speed), -speed * cos(angle))
+	velocity = Vector2.UP.rotated(angle) * absf(speed)
 	_life = config.lifespan
 	_age = 0.0
 	_friendly = friendly
@@ -63,7 +63,7 @@ func fire(config: Dictionary, pos: Vector2, angle_deg: float, muzzle: Dictionary
 	_anim.flip_v = flip
 	for visual in _visuals:
 		visual.scale = Vector2.ONE * scale_factor
-		visual.rotation = -angle if flip else angle
+		visual.rotation = angle + PI if flip else angle # flipped sprites face down
 	_shape.size = config.get("body", Vector2(14, 18)) * scale_factor
 	collision_layer = Config.LAYER_PLAYER_BULLET if friendly else Config.LAYER_ENEMY_BULLET
 	collision_mask = Config.LAYER_ENEMY if friendly else Config.LAYER_PLAYER
@@ -129,7 +129,7 @@ func _nearest_enemy_ahead() -> Node2D:
 	var nearest: Node2D
 	var nearest_distance: float = _homing.range
 	for enemy: Node2D in get_tree().get_nodes_in_group("enemies"):
-		if not _can_be_hit(enemy) or enemy.global_position.y > global_position.y:
+		if not _can_be_hit(enemy) or velocity.dot(enemy.global_position - global_position) < 0.0:
 			continue
 		var distance := global_position.distance_to(enemy.global_position)
 		if distance <= nearest_distance:
@@ -139,4 +139,4 @@ func _nearest_enemy_ahead() -> Node2D:
 
 
 func _can_be_hit(enemy: Node2D) -> bool:
-	return enemy != null and enemy.is_alive() and Rect2(Vector2.ZERO, Config.WORLD).has_point(enemy.global_position)
+	return enemy != null and enemy.is_alive() and Config.view_rect().has_point(enemy.global_position)

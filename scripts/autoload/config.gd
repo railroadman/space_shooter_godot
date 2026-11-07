@@ -10,19 +10,20 @@ const LAYER_ENEMY_BULLET := 8
 const LAYER_PICKUP := 16
 
 # --- world
-const WORLD := Vector2(450, 640)
 const UI_SAFE_MARGIN := 15.0
-const SPAWN_MARGIN_X := 30.0
-const SPAWN_OFFSET_Y := -20.0
-const DESPAWN_MARGIN_Y := 50.0
+const SPAWN_RING_MARGIN := 60.0 # px outside the view where enemies appear
+const DESPAWN_RING_FACTOR := 1.8 # enemies farther than spawn radius * factor from the player are released
+const ACTIVE_VIEW_MARGIN := 40.0 # ships this far outside the view still count as on screen
 
 # --- player
 const PLAYER_LIVES := 3
 const PLAYER_HEALTH := 100.0
 const PLAYER_EXTRA_LIFE_SCORE := 5000
-const PLAYER_SPEED := 125.0
+const PLAYER_SPEED := 200.0 # top speed
+const PLAYER_ACCELERATION := 500.0 # px/s^2 while a move key is held
+const PLAYER_DRIFT_DRAG := 30.0 # px/s^2 lost while coasting: from top speed it takes ~6.7 s to stop
+const PLAYER_TURN_RATE := 540.0 # deg/s the ship turns toward its movement direction
 const PLAYER_BODY_SIZE := 24.0
-const PLAYER_SPAWN_OFFSET_Y := 32.0
 const PLAYER_BULLET_Y_OFFSET := -20.0
 const PLAYER_INVULNERABLE_TIME := 3000.0
 const PLAYER_BLINK_INTERVAL := 100.0
@@ -116,7 +117,7 @@ const DROP_WEIGHTS := {"health": 35, "shield": 30, "main": 25, "secondary": 10}
 const DROP_MAIN := ["plasma", "shotgun", "laser", "lightning"]
 const DROP_SECONDARY := ["rocket"]
 const PICKUP := {
-	"fall_speed": 55.0, "scale": 0.5, "body": 56.0, "spin_speed": 40.0, "pulse_amount": 0.08, "pulse_period": 700.0,
+	"scale": 0.5, "body": 56.0, "spin_speed": 40.0, "pulse_amount": 0.08, "pulse_period": 700.0,
 	"lifetime": 9000.0, "blink_time": 2500.0, "blink_interval": 120.0,
 }
 const HEALTH_PICKUP_HEAL := 0.3
@@ -125,23 +126,25 @@ const SHIELD := {"charges": 3, "hit_grace": 400.0, "radius": 30.0, "color": Colo
 # --- enemies (bullet `speed` < 0 means the bullet flies down)
 const ENEMY_BODY_SIZE := 24.0
 const ENEMY_BULLET_Y_OFFSET := 10.0
-const ENEMY_BULLET_DAMAGE := 17
+const ENEMY_BULLET_DAMAGE := 8
+const ENEMY_RAM_DAMAGE := 15.0 # a ship that rams the player is destroyed and hurts the player
 const ENEMY_BULLET_HIT_EFFECT := "plasma"
 const ENEMY_ZIGZAG_SCALE := Vector2(0.7, 1.3)
-const ENEMY_MAX_SPEED := 200.0
+const ENEMY_MAX_SPEED := 320.0
+const ENEMY_TURN_RATE := 120.0 # deg/s an enemy turns toward the player
 const SCOUT := {
-	"score": 100, "health": 2, "v_speed": 35.0, "h_speed": 80.0, "drop_chance": 0.065,
-	"bullet": {"speed": -250.0, "interval": 5000.0, "lifespan": 3.0},
-	"spawn_interval": 5000.0, "spawn_start": 1000.0,
+	"score": 100, "health": 2, "v_speed": 90.0, "h_speed": 80.0, "drop_chance": 0.065,
+	"bullet": {"speed": -250.0, "interval": 7000.0, "lifespan": 3.0},
+	"spawn_interval": 10000.0, "spawn_start": 1000.0,
 	"patterns": ["wave", "zigzag"], "wave_period": 2600.0, "zigzag_interval": 900.0, "zigzag_smoothing": 5.0,
 	"burst": {"count": 2, "delay": 250.0}, "aim_max_angle": 30.0,
-	"formations": [{"type": "single", "count": 1}, {"type": "single", "count": 1}, {"type": "line", "count": 3}],
+	"formations": [{"type": "single", "count": 1}, {"type": "single", "count": 1}, {"type": "single", "count": 1}, {"type": "line", "count": 3}],
 }
 const FIGHTER := {
-	"score": 200, "health": 3, "v_speed": 40.0, "h_speed": 45.0, "drop_chance": 0.22,
-	"bullet": {"speed": -280.0, "interval": 4000.0, "lifespan": 3.0},
-	"spawn_interval": 7000.0, "spawn_start": 3000.0,
-	"patterns": ["dash"], "chase_range": 120.0, "chase_smoothing": 3.0, "spread": [-18, 0, 18],
+	"score": 200, "health": 3, "v_speed": 110.0, "h_speed": 45.0, "drop_chance": 0.22,
+	"bullet": {"speed": -280.0, "interval": 6000.0, "lifespan": 3.0},
+	"spawn_interval": 14000.0, "spawn_start": 3000.0,
+	"patterns": ["dash"], "spread": [-18, 0, 18],
 	"dash": {"cooldown_min": 3500, "cooldown_max": 6500, "windup": 350.0, "windup_axis_factor": 0.2, "windup_speed_scale": 0.4,
 		"duration": 450.0, "axis_boost": 2.0, "speed_boost": 2.5},
 	"formations": [{"type": "single", "count": 1}, {"type": "v", "count": 3}],
@@ -176,9 +179,10 @@ const DIFFICULTY_STAGES := [
 const BOSS := {
 	"spawn": {"time_min": 300000, "time_max": 360000, "warning": 3.0, "resume_delay": 4.0},
 	"health": 300, "score": 5000, "victory_delay": 1.5,
-	"sprite": {"scale": 0.56, "body": Vector2(120, 110), "move_margin": 115.0, "spawn_y": -100.0},
-	"entry": {"hold_y": 150.0, "min_speed": 30.0, "gain": 1.5},
-	"max_vertical_speed": 400.0,
+	"sprite": {"scale": 0.56, "body": Vector2(120, 110)},
+	"entry": {"hold_distance": 300.0, "min_speed": 60.0, "gain": 1.5}, # px from the player where the boss circles
+	"max_speed": 400.0,
+	"turn_rate": 60.0, # deg/s the boss swings its nose toward the player
 	"transition": {"duration": 1200.0, "flash": 200.0},
 	"hit_flash": 50.0,
 	"weapons": {
@@ -197,10 +201,10 @@ const BOSS := {
 	},
 	# a phase ends when the health fraction drops to hp_to; attacks fire `weapon` every `interval` ms
 	"phases": [
-		{"hp_to": 0.65, "move": {"type": "sway", "period": 4200.0, "speed": 60.0, "return_gain": 2.0},
+		{"hp_to": 0.65, "move": {"type": "sway", "period": 4200.0, "speed": 90.0, "return_gain": 2.0},
 			"attacks": [{"weapon": "main", "interval": 2200.0, "first_delay": 1200.0}],
 			"tint": Color.WHITE, "bar_color": Color("4fd8ff"), "clear_bullets": false},
-		{"hp_to": 0.3, "move": {"type": "sway", "period": 3000.0, "speed": 85.0, "return_gain": 2.0},
+		{"hp_to": 0.3, "move": {"type": "sway", "period": 3000.0, "speed": 130.0, "return_gain": 2.0},
 			"attacks": [
 				{"weapon": "main", "interval": 2000.0, "first_delay": 800.0},
 				{"weapon": "wing_l", "interval": 3200.0, "first_delay": 1500.0},
@@ -208,7 +212,7 @@ const BOSS := {
 				{"weapon": "snipe", "interval": 5200.0, "first_delay": 2400.0}],
 			"tint": Color.WHITE, "bar_color": Color("ffd24f"), "clear_bullets": true},
 		{"hp_to": 0.0,
-			"move": {"type": "dash", "range": 140.0, "smoothing": 2.5, "speed": 90.0, "return_gain": 2.0, "dive_speed": 220.0,
+			"move": {"type": "dash", "period": 3600.0, "speed": 130.0, "return_gain": 2.0, "dive_speed": 220.0,
 				"dash": {"cooldown_min": 4000, "cooldown_max": 6000, "windup": 600.0, "windup_axis_factor": 0.1,
 					"windup_speed_scale": 0.6, "duration": 500.0, "axis_boost": 1.6, "speed_boost": 2.2}},
 			"attacks": [
@@ -257,6 +261,28 @@ const UI_POPUP_EDGE_MARGIN := 30.0
 const UI_EXTRA_LIFE_TEXT := "+1"
 
 var _weapon_textures: Dictionary = {}
+
+
+## Size of the visible area in world px (the window shape decides it, the camera never zooms).
+func view_size() -> Vector2:
+	return get_viewport().get_visible_rect().size
+
+
+## Centre of the visible area: the camera, or the origin before a camera exists.
+func view_center() -> Vector2:
+	var camera := get_viewport().get_camera_2d()
+	return camera.get_screen_center_position() if camera != null else Vector2.ZERO
+
+
+## The visible area in world coordinates, grown by `margin` px on every side.
+func view_rect(margin := 0.0) -> Rect2:
+	var size := view_size()
+	return Rect2(view_center() - size / 2.0, size).grow(margin)
+
+
+## Radius of the ring where enemies appear: just beyond the screen corners.
+func spawn_radius() -> float:
+	return view_size().length() / 2.0 + SPAWN_RING_MARGIN
 
 
 ## Texture of a weapons atlas frame (`plasma_shot`, `box_health`, ...), loaded once.

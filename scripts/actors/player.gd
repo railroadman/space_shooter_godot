@@ -12,6 +12,8 @@ var loadout: Loadout
 var _invulnerable_time := 0.0
 var _flash_time := 0.0
 var _last_life := Config.PLAYER_HEALTH
+var velocity := Vector2.ZERO
+
 var _is_thrusting := false
 
 @onready var _ship: Sprite2D = $Ship
@@ -43,13 +45,24 @@ func _physics_process(delta: float) -> void:
 
 
 func _move(delta: float) -> void:
-	var direction := Vector2(Input.get_axis("move_left", "move_right"), Input.get_axis("move_up", "move_down"))
-	var half := Config.PLAYER_BODY_SIZE / 2.0
-	position = (position + direction * Config.PLAYER_SPEED * delta).clamp(Vector2(half, half), Config.WORLD - Vector2(half, half))
-	var thrusting := direction.y < 0.0
+	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if direction != Vector2.ZERO: # the nose turns toward the flight direction (sprite faces up at rotation 0)
+		rotation = rotate_toward(rotation, direction.angle() + PI / 2.0, deg_to_rad(Config.PLAYER_TURN_RATE) * delta)
+	velocity = step_velocity(velocity, direction, delta)
+	position += velocity * delta
+	Events.player_moved.emit(position, rotation)
+	var thrusting := direction != Vector2.ZERO
 	if thrusting != _is_thrusting:
 		_is_thrusting = thrusting
 		Events.player_thrust.emit(thrusting)
+
+
+## Inertia: input accelerates the ship (up to the top speed); without input it keeps drifting the same way and only
+## slowly loses speed (a gentle constant drag, not a brake).
+static func step_velocity(current: Vector2, direction: Vector2, delta: float) -> Vector2:
+	if direction == Vector2.ZERO:
+		return current.move_toward(Vector2.ZERO, Config.PLAYER_DRIFT_DRAG * delta)
+	return (current + direction * Config.PLAYER_ACCELERATION * delta).limit_length(Config.PLAYER_SPEED)
 
 
 func _spawn() -> void:
@@ -62,7 +75,11 @@ func _spawn() -> void:
 	_last_life = health.life
 	_flash_time = 0.0
 	_set_flash(0.0)
-	position = Vector2(Config.WORLD.x / 2.0, Config.WORLD.y - Config.PLAYER_SPAWN_OFFSET_Y)
+	rotation = 0.0
+	position = Vector2.ZERO # centre of the map; the camera follows
+	velocity = Vector2.ZERO
+	_is_thrusting = false
+	Events.player_moved.emit(position, rotation)
 
 
 func _die() -> void:

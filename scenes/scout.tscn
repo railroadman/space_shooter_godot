@@ -1,10 +1,10 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dvl2bwlkjvoep"]
 
-[ext_resource type="Script" path="res://scripts/actors/enemy.gd" id="enemy"]
-[ext_resource type="Script" path="res://scripts/weapons/weapon.gd" id="weapon"]
-[ext_resource type="Texture2D" path="res://assets/images/foozle/scout.png" id="ship"]
-[ext_resource type="SpriteFrames" path="res://resources/frames/scout_engine.tres" id="engine"]
-[ext_resource type="SpriteFrames" path="res://resources/frames/scout_destroy.tres" id="destroy"]
+[ext_resource type="SpriteFrames" uid="uid://bodwxayfbdqgi" path="res://resources/frames/scout_destroy.tres" id="destroy"]
+[ext_resource type="Script" uid="uid://dm7jywldw4vts" path="res://scripts/actors/enemy.gd" id="enemy"]
+[ext_resource type="SpriteFrames" uid="uid://c5nydmvuq2a8j" path="res://resources/frames/scout_engine.tres" id="engine"]
+[ext_resource type="Texture2D" uid="uid://cgdd0eo6jdm3r" path="res://assets/images/foozle/scout.png" id="ship"]
+[ext_resource type="Script" uid="uid://33ic42p447vx" path="res://scripts/weapons/weapon.gd" id="weapon"]
 
 [sub_resource type="CanvasItemMaterial" id="add"]
 blend_mode = 1
@@ -12,27 +12,26 @@ blend_mode = 1
 [sub_resource type="RectangleShape2D" id="shape"]
 size = Vector2(24, 24)
 
-[node name="Scout" type="Area2D"]
+[node name="Scout" type="Area2D" unique_id=1528490576]
 z_index = 1
 collision_layer = 2
-collision_mask = 1
 script = ExtResource("enemy")
-kind = "scout"
+kind = null
 destroy_frames = ExtResource("destroy")
 
-[node name="Engine" type="AnimatedSprite2D" parent="."]
-material = SubResource("add")
+[node name="Engine" type="AnimatedSprite2D" parent="." unique_id=1221003086]
 texture_filter = 1
+material = SubResource("add")
 sprite_frames = ExtResource("engine")
-autoplay = &"default"
+autoplay = "default"
 flip_v = true
 
-[node name="Ship" type="Sprite2D" parent="."]
+[node name="Ship" type="Sprite2D" parent="." unique_id=1599798265]
 texture_filter = 1
 texture = ExtResource("ship")
 
-[node name="Shape" type="CollisionShape2D" parent="."]
+[node name="Shape" type="CollisionShape2D" parent="." unique_id=1803103891]
 shape = SubResource("shape")
 
-[node name="Weapon" type="Node" parent="."]
+[node name="Weapon" type="Node" parent="." unique_id=216095070]
 script = ExtResource("weapon")

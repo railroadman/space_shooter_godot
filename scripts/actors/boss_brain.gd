@@ -1,7 +1,8 @@
 class_name BossBrain
 extends RefCounted
-## Decides what the boss does: flies in, then plays its phases in order (a phase ends when the boss health drops to
-## its `hp_to`). A phase has a movement pattern and attacks that pull the trigger of a boss weapon at intervals.
+## Decides what the boss does: flies in toward the player, then plays its phases in order (a phase ends when the boss
+## health drops to its `hp_to`). A phase has a movement pattern (strafing around the player, with dives) and attacks
+## that pull the trigger of a boss weapon at intervals.
 
 var _boss: Boss
 var _player: Node2D
@@ -12,7 +13,7 @@ var _phase := -1
 var _pattern: MovementPatterns.Pattern
 var _timers: Array[float] = [] # ms until each attack of the phase fires
 var _transition := 0.0 # ms of invulnerability and silence after a phase change
-var _out := {"axis_x": 0.0, "speed_scale": 1.0}
+var _out := {"lateral": 0.0, "speed_scale": 1.0}
 
 
 func _init(boss: Boss, player: Node2D, weapons: Dictionary, on_phase_change: Callable) -> void:
@@ -40,14 +41,14 @@ func update(dt: float) -> void:
 
 func _fly_in() -> void:
 	var entry: Dictionary = Config.BOSS.entry
-	var distance: float = entry.hold_y - _boss.position.y
+	var to_player := _player.position - _boss.position
+	var distance := to_player.length() - float(entry.hold_distance)
 	if distance <= 1.0:
 		_boss.velocity = Vector2.ZERO
-		_boss.position.y = entry.hold_y
 		_is_entering = false
 		_start_phase(0, true)
 		return
-	_boss.velocity = Vector2(0.0, maxf(entry.min_speed, distance * entry.gain))
+	_boss.velocity = to_player.normalized() * maxf(entry.min_speed, distance * entry.gain)
 
 
 func _check_phase() -> void:
@@ -72,30 +73,23 @@ func _start_phase(index: int, is_first: bool) -> void:
 
 
 func _create_pattern(move: Dictionary) -> MovementPatterns.Pattern:
-	match move.type:
-		"chase":
-			return MovementPatterns.Chase.new(move.range, move.smoothing)
-		"dash":
-			return MovementPatterns.Dash.new(MovementPatterns.Chase.new(move.range, move.smoothing), move.dash)
-		_:
-			return MovementPatterns.Wave.new(move.period)
+	var strafe := MovementPatterns.Wave.new(move.period)
+	if move.type == "dash":
+		return MovementPatterns.Dash.new(strafe, move.dash)
+	return strafe
 
 
-## Horizontal motion from the pattern (never past the screen margins), and a pull back to the hover height.
+## Strafes sideways around the player (the pattern's lateral share), holds its distance and dives at the player.
 func _move(dt: float) -> void:
 	var move: Dictionary = Config.BOSS.phases[_phase].move
 	_pattern.update(dt, _boss, _player, _out)
-	var margin: float = Config.BOSS.sprite.move_margin
-	var min_x := margin
-	var max_x := Config.WORLD.x - margin
-	var velocity_x: float = _out.axis_x * move.speed
-	if (_boss.position.x <= min_x and velocity_x < 0.0) or (_boss.position.x >= max_x and velocity_x > 0.0):
-		velocity_x = 0.0
-	_boss.position.x = clampf(_boss.position.x, min_x, max_x)
-	var velocity_y: float = (Config.BOSS.entry.hold_y - _boss.position.y) * move.return_gain \
-		+ (_out.speed_scale - 1.0) * move.get("dive_speed", 0.0)
-	var limit: float = Config.BOSS.max_vertical_speed
-	_boss.velocity = Vector2(velocity_x, clampf(velocity_y, -limit, limit))
+	var to_player := _player.position - _boss.position
+	var distance := to_player.length()
+	var toward := to_player / distance if distance > 0.0 else Vector2.DOWN
+	var hold: float = Config.BOSS.entry.hold_distance
+	var strafe: Vector2 = toward.orthogonal() * (_out.lateral * move.speed)
+	var radial: Vector2 = toward * ((distance - hold) * move.return_gain + (_out.speed_scale - 1.0) * move.get("dive_speed", 0.0))
+	_boss.velocity = (strafe + radial).limit_length(Config.BOSS.max_speed)
 
 
 func _update_attacks(dt: float) -> void:
@@ -106,4 +100,3 @@ func _update_attacks(dt: float) -> void:
 			continue
 		_weapons[attacks[i].weapon].trigger()
 		_timers[i] = attacks[i].interval
-

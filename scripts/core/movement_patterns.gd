@@ -1,7 +1,8 @@
 class_name MovementPatterns
 extends RefCounted
-## Trajectory strategies of bots. Each `update(dt_ms, me, target, out)` writes `out.axis_x` (-1..1, share of the
-## horizontal speed) and `out.speed_scale` (multiplier of the vertical speed).
+## Trajectory strategies of bots. The bot always steers toward its target (heading); each
+## `update(dt_ms, me, target, out)` writes `out.lateral` (-1..1, share of the sideways speed, perpendicular to the
+## heading) and `out.speed_scale` (multiplier of the forward speed).
 
 
 class Pattern extends RefCounted:
@@ -12,7 +13,14 @@ class Pattern extends RefCounted:
 		pass
 
 
-## Sine wave left and right.
+## Straight at the target.
+class Steady extends Pattern:
+	func update(_dt: float, _me: Node2D, _target: Node2D, out: Dictionary) -> void:
+		out.lateral = 0.0
+		out.speed_scale = 1.0
+
+
+## Sine wave left and right of the heading.
 class Wave extends Pattern:
 	var _period: float
 	var _elapsed := 0.0
@@ -25,11 +33,11 @@ class Wave extends Pattern:
 
 	func update(dt: float, _me: Node2D, _target: Node2D, out: Dictionary) -> void:
 		_elapsed += dt
-		out.axis_x = sin(TAU * _elapsed / _period)
+		out.lateral = sin(TAU * _elapsed / _period)
 		out.speed_scale = 1.0
 
 
-## Changes direction at random intervals, turns around at the edges.
+## Changes sideways direction at random intervals.
 class Zigzag extends Pattern:
 	var _interval: float
 	var _smoothing: float
@@ -46,43 +54,17 @@ class Zigzag extends Pattern:
 		_axis = 0.0
 		_timer = _next_interval()
 
-	func update(dt: float, me: Node2D, _target: Node2D, out: Dictionary) -> void:
+	func update(dt: float, _me: Node2D, _target: Node2D, out: Dictionary) -> void:
 		_timer -= dt
 		if _timer <= 0.0:
 			_direction = -_direction
 			_timer = _next_interval()
-		if me.position.x < Config.SPAWN_MARGIN_X:
-			_direction = 1.0
-		elif me.position.x > Config.WORLD.x - Config.SPAWN_MARGIN_X:
-			_direction = -1.0
 		_axis += (_direction - _axis) * minf(1.0, _smoothing * dt / 1000.0)
-		out.axis_x = _axis
+		out.lateral = _axis
 		out.speed_scale = 1.0
 
 	func _next_interval() -> float:
 		return _interval * randf_range(Config.ENEMY_ZIGZAG_SCALE.x, Config.ENEMY_ZIGZAG_SCALE.y)
-
-
-## Eased follow of the target's x.
-class Chase extends Pattern:
-	var _range: float
-	var _smoothing: float
-	var _axis := 0.0
-
-	func _init(range_px: float, smoothing: float) -> void:
-		_range = range_px
-		_smoothing = smoothing
-
-	func reset() -> void:
-		_axis = 0.0
-
-	func update(dt: float, me: Node2D, target: Node2D, out: Dictionary) -> void:
-		var wanted := 0.0
-		if target != null and target.visible:
-			wanted = clampf((target.position.x - me.position.x) / _range, -1.0, 1.0)
-		_axis += (wanted - _axis) * minf(1.0, _smoothing * dt / 1000.0)
-		out.axis_x = _axis
-		out.speed_scale = 1.0
 
 
 ## Decorator: the base pattern plus telegraphed dashes (wind-up, then a fast dive).
@@ -114,13 +96,13 @@ class Dash extends Pattern:
 					_state = State.WINDUP
 					_timer = _options.windup
 			State.WINDUP:
-				out.axis_x *= _options.windup_axis_factor
+				out.lateral *= _options.windup_axis_factor
 				out.speed_scale = _options.windup_speed_scale
 				if _timer <= 0.0:
 					_state = State.DASH
 					_timer = _options.duration
 			State.DASH:
-				out.axis_x *= _options.axis_boost
+				out.lateral *= _options.axis_boost
 				out.speed_scale = _options.speed_boost
 				if _timer <= 0.0:
 					_state = State.IDLE

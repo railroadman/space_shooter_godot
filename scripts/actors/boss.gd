@@ -32,6 +32,7 @@ func _ready() -> void:
 	_bullet_pool = get_tree().get_first_node_in_group("bullets")
 	var weapons := _setup_weapons()
 	_brain = BossBrain.new(self, _player, weapons, _on_phase_change)
+	_bar.top_level = true # the bar must not turn with the ship
 	_bar.modulate.a = 0.0
 	add_to_group("enemies")
 
@@ -52,6 +53,7 @@ func _physics_process(delta: float) -> void:
 		_die()
 		return
 	position += velocity * delta
+	_face_player(delta)
 	_brain.update(delta * 1000.0)
 	collider.is_invulnerable = _brain.is_invulnerable()
 	_track_health()
@@ -80,6 +82,12 @@ func _setup_weapons() -> Dictionary:
 		weapon.set_config(config)
 		weapons[id] = weapon
 	return weapons
+
+
+## Swings the nose (down at rotation 0) toward the player at a limited rate.
+func _face_player(delta: float) -> void:
+	var wanted := (_player.position - position).angle() - PI / 2.0
+	rotation = rotate_toward(rotation, wanted, deg_to_rad(Config.BOSS.turn_rate) * delta)
 
 
 func _on_phase_change(_index: int, phase: Dictionary, is_first: bool) -> void:
@@ -114,8 +122,9 @@ func _update_flash(dt: float) -> void:
 ## The bar hovers above the boss, kept inside the screen, and fades in and out.
 func _update_bar(delta: float) -> void:
 	var margin := Config.UI_SAFE_MARGIN
-	_bar.position.x = clampf(-_bar.size.x / 2.0, margin - position.x, Config.WORLD.x - margin - _bar.size.x - position.x)
-	_bar.position.y = maxf(46.0 - position.y, -95.0)
+	var view := Config.view_rect()
+	_bar.global_position.x = clampf(position.x - _bar.size.x / 2.0, view.position.x + margin, view.end.x - margin - _bar.size.x)
+	_bar.global_position.y = clampf(position.y - 95.0, view.position.y + margin, view.end.y - margin - _bar.size.y)
 	var step := delta / bar_fade_time
 	_bar.modulate.a = clampf(_bar.modulate.a + (step if _bar_shown else -step), 0.0, 1.0)
 

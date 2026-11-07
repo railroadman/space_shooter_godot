@@ -31,6 +31,7 @@ func open() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
+	var viewport := get_viewport() # taken first: reloading the scene takes this node out of the tree
 	if restart and event.is_action_pressed("confirm"):
 		get_tree().paused = false
 		get_tree().reload_current_scene()
@@ -39,4 +40,4 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_tree().paused = false
 	else:
 		return
-	get_viewport().set_input_as_handled()
+	viewport.set_input_as_handled()

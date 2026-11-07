@@ -1,7 +1,7 @@
 class_name Enemy
 extends Area2D
-## A pooled enemy ship (scout or fighter, chosen by `kind`). The spawner calls `spawn()`; the ship follows its
-## movement pattern, shoots all the time and gives its score when destroyed.
+## A pooled enemy ship (scout or fighter, chosen by `kind`). The spawner calls `spawn()`; the ship turns toward the
+## player, follows its movement pattern, shoots all the time and gives its score when destroyed.
 
 @export_enum("scout", "fighter") var kind := "scout"
 ## Played by the effects node where the ship dies.
@@ -16,7 +16,8 @@ var drop_chance := 0.0
 var _def: Dictionary
 var _patterns: Dictionary = {}
 var _pattern: MovementPatterns.Pattern
-var _out := {"axis_x": 0.0, "speed_scale": 1.0}
+var _out := {"lateral": 0.0, "speed_scale": 1.0}
+var _heading := Vector2.DOWN
 var _player: Node2D
 var _difficulty: Difficulty
 
@@ -48,6 +49,8 @@ func spawn(at: Vector2) -> void:
 	_weapon.set_config(_weapon_config())
 	_pattern = _patterns[_def.patterns.pick_random()]
 	_pattern.reset()
+	_heading = _to_player()
+	_face_heading()
 	add_to_group("enemies")
 
 
@@ -56,20 +59,19 @@ func _physics_process(delta: float) -> void:
 		Events.enemy_destroyed.emit(self)
 		_leave()
 		return
+	_steer(delta)
 	_pattern.update(delta * 1000.0, self, _player, _out)
-	var velocity := Vector2(_out.axis_x * _def.h_speed, _out.speed_scale * _def.v_speed)
+	var velocity: Vector2 = _heading *(_out.speed_scale * _def.v_speed) + _heading.orthogonal() * (_out.lateral * _def.h_speed)
 	position += velocity.limit_length(Config.ENEMY_MAX_SPEED) * delta
-	if kind == "scout":
-		var half := Config.ENEMY_BODY_SIZE / 2.0
-		position.x = clampf(position.x, half, Config.WORLD.x - half)
-	if position.y > Config.WORLD.y + Config.DESPAWN_MARGIN_Y:
+	_face_heading()
+	if position.distance_to(_player.position) > Config.spawn_radius() * Config.DESPAWN_RING_FACTOR:
 		_leave()
 
 
 func _on_area_entered(area: Area2D) -> void:
 	if not area.visible:
 		return
-	area.collider.collide_with_ship()
+	area.collider.collide_with_projectile(Config.ENEMY_RAM_DAMAGE) # a ram hurts, it no longer kills outright
 	collider.collide_with_ship()
 
 
@@ -78,14 +80,32 @@ func _leave() -> void:
 	pool.release(self)
 
 
+## Direction to the player (keeps the current heading while the player is gone).
+func _to_player() -> Vector2:
+	if _player == null or not _player.visible:
+		return _heading
+	return (_player.position - position).normalized()
+
+
+## Turns the heading toward the player at a limited rate, so the ship swings around instead of snapping.
+func _steer(delta: float) -> void:
+	var wanted := _to_player()
+	var max_turn := deg_to_rad(Config.ENEMY_TURN_RATE) * delta
+	_heading = _heading.rotated(clampf(_heading.angle_to(wanted), -max_turn, max_turn))
+
+
+## Enemy sprites face down at rotation 0.
+func _face_heading() -> void:
+	rotation = _heading.angle() - PI / 2.0
+
+
 func _create_patterns() -> Dictionary:
 	if kind == "scout":
 		return {
 			"wave": MovementPatterns.Wave.new(_def.wave_period),
 			"zigzag": MovementPatterns.Zigzag.new(_def.zigzag_interval, _def.zigzag_smoothing),
 		}
-	var chase := MovementPatterns.Chase.new(_def.chase_range, _def.chase_smoothing)
-	return {"dash": MovementPatterns.Dash.new(chase, _def.dash)}
+	return {"dash": MovementPatterns.Dash.new(MovementPatterns.Steady.new(), _def.dash)}
 
 
 func _weapon_config() -> Dictionary:

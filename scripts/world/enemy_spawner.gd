@@ -1,7 +1,7 @@
 class_name EnemySpawner
 extends Node
-## Spawns formations (single, line, V) of one enemy kind at intervals scaled by the difficulty stage.
-## Stops while the boss is around and after the game is over.
+## Spawns formations (single, line, V) of one enemy kind on a ring just outside the screen, from a random side, at
+## intervals scaled by the difficulty stage. Stops while the boss is around and after the game is over.
 
 @export_enum("scout", "fighter") var kind := "scout"
 
@@ -38,22 +38,24 @@ func _on_boss_defeated() -> void:
 	_timer = Config.BOSS.spawn.resume_delay * 1000.0
 
 
+## The ships line up along the tangent of the ring at a random angle; a V staggers its wings in time.
 func _spawn_formation(formation: Dictionary) -> void:
+	var outward := Vector2.from_angle(randf() * TAU)
+	var tangent := outward.orthogonal()
+	var center := Config.view_center() + outward * Config.spawn_radius()
 	var half: float = (formation.count - 1) / 2.0
-	var span := half * Config.FORMATION_SPACING_X
-	var center := randf_range(Config.SPAWN_MARGIN_X + span, Config.WORLD.x - Config.SPAWN_MARGIN_X - span)
 	for i in formation.count:
 		var offset: float = i - half
-		var x: float = center + offset * Config.FORMATION_SPACING_X
+		var at := center + tangent * offset * Config.FORMATION_SPACING_X
 		var delay := absf(offset) * Config.FORMATION_STAGGER_DELAY if formation.type == "v" else 0.0
 		if delay == 0.0:
-			_spawn_one(x)
+			_spawn_one(at)
 		else:
-			get_tree().create_timer(delay).timeout.connect(_spawn_one.bind(x))
+			get_tree().create_timer(delay).timeout.connect(_spawn_one.bind(at))
 
 
-func _spawn_one(x: float) -> void:
+func _spawn_one(at: Vector2) -> void:
 	if _is_disabled or _is_boss_active:
 		return
 	var enemy: Enemy = _pool.acquire()
-	enemy.spawn(Vector2(x, Config.SPAWN_OFFSET_Y))
+	enemy.spawn(at)

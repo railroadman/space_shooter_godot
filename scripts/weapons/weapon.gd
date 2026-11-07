@@ -1,7 +1,9 @@
 class_name Weapon
 extends Node
-## Fires bullets from its parent node. The owner sets `firing` (held trigger) or calls `trigger()` (one shot request).
-## `config` holds the bullet settings (see Config.WEAPON_TYPES); bullets come from the shared pool in group "bullets".
+## Fires bullets from its parent node along the parent's nose. The owner sets `firing` (held trigger) or calls
+## `trigger()` (one shot request). `config` holds the bullet settings (see Config.WEAPON_TYPES); bullets come from
+## the shared pool in group "bullets". Muzzle offsets are in the ship's local space (player: nose is up, enemies with
+## `flip_y` have their nose down at rotation 0).
 
 const STRAIGHT: Array = [0]
 
@@ -44,7 +46,7 @@ func trigger() -> void:
 func _physics_process(delta: float) -> void:
 	var wants_fire := firing or _requested
 	_requested = false
-	if config.is_empty() or _shooter.position.y < 0.0:
+	if config.is_empty() or not Config.view_rect(Config.ACTIVE_VIEW_MARGIN).has_point(_shooter.global_position):
 		return
 	var dt := delta * 1000.0
 	_update_burst(dt)
@@ -76,24 +78,31 @@ func _fire_volley() -> bool:
 	var muzzles: Array = config.get("muzzles", [])
 	if muzzles.is_empty():
 		muzzles = [{"x": 0.0, "y": config.get("y_offset", 0.0)}]
+	var base := _nose_angle()
 	for muzzle: Dictionary in muzzles:
-		var offset := Vector2(muzzle.x, muzzle.y)
-		var aim := _aim_angle(offset)
+		var origin := _shooter.global_position + Vector2(muzzle.x, muzzle.y).rotated(_shooter.global_rotation)
+		var aim := _aim_angle(origin, base)
 		for angle: float in angles:
 			var bullet: Bullet = _bullets.acquire()
-			bullet.fire(config, _shooter.global_position + offset, angle + aim, muzzle, friendly, _shooter)
+			bullet.fire(config, origin, base + aim + angle, muzzle, friendly, _shooter)
 	return true
 
 
-## Degrees from "straight" to the aim target as seen from the muzzle (0 without a usable target). Targets behind the
+## Degrees from straight up to the ship's nose.
+func _nose_angle() -> float:
+	var angle := rad_to_deg(_shooter.global_rotation)
+	return angle + 180.0 if config.get("flip_y", false) else angle
+
+
+## Degrees from the nose to the aim target as seen from the muzzle (0 without a usable target). Targets behind the
 ## muzzle are ignored and the angle is limited, so shots stay dodgeable.
-func _aim_angle(offset: Vector2) -> float:
+func _aim_angle(origin: Vector2, base: float) -> float:
 	var target: Node2D = config.get("aim_target")
 	if target == null or not target.visible:
 		return 0.0
-	var forward := -signf(config.speed)
-	var delta := target.global_position - (_shooter.global_position + offset)
-	if delta.y * forward <= 0.0:
+	var to_target := target.global_position - origin
+	var offset := wrapf(rad_to_deg(atan2(to_target.x, -to_target.y)) - base, -180.0, 180.0)
+	if absf(offset) >= 90.0:
 		return 0.0
 	var limit: float = config.get("max_aim_angle", 35.0)
-	return clampf(rad_to_deg(atan2(delta.x, delta.y * forward)), -limit, limit)
+	return clampf(offset, -limit, limit)

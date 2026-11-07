@@ -34,6 +34,6 @@ func _physics_process(delta: float) -> void:
 
 func _spawn_boss() -> void:
 	var boss: Boss = boss_scene.instantiate()
-	boss.position = Vector2(Config.WORLD.x / 2.0, Config.BOSS.sprite.spawn_y)
+	boss.position = Config.view_center() + Vector2.from_angle(randf() * TAU) * Config.spawn_radius() # from a random side
 	get_parent().add_child(boss)
 	Events.boss_spawn.emit(boss)

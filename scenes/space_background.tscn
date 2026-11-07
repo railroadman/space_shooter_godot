@@ -1,126 +1,120 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://c1ctumaq6rehx"]
 
-[ext_resource type="Script" path="res://scripts/world/space_background.gd" id="bg"]
-[ext_resource type="Script" path="res://scripts/world/scrolling_layer.gd" id="layer"]
-[ext_resource type="Script" path="res://scripts/world/space_props.gd" id="props"]
-[ext_resource type="Script" path="res://scripts/world/streaks.gd" id="streaks"]
-[ext_resource type="Texture2D" path="res://assets/images/backgrounds/bg_nebula_1.jpg" id="bg_nebula_1"]
-[ext_resource type="Texture2D" path="res://assets/images/backgrounds/bg_nebula_2.jpg" id="bg_nebula_2"]
-[ext_resource type="Texture2D" path="res://assets/images/backgrounds/bg_nebula_3.jpg" id="bg_nebula_3"]
-[ext_resource type="Texture2D" path="res://assets/images/backgrounds/bg_nebula_4.jpg" id="bg_nebula_4"]
-[ext_resource type="Texture2D" path="res://assets/images/backgrounds/nebula_0.png" id="neb0"]
-[ext_resource type="Texture2D" path="res://assets/images/backgrounds/nebula_1.png" id="neb1"]
-[ext_resource type="Texture2D" path="res://assets/images/backgrounds/nebula_2.png" id="neb2"]
-[ext_resource type="Texture2D" path="res://assets/images/backgrounds/star_far.png" id="star_far"]
-[ext_resource type="Texture2D" path="res://assets/images/backgrounds/star_mid.png" id="star_mid"]
-[ext_resource type="Texture2D" path="res://assets/images/backgrounds/star_near.png" id="star_near"]
-[ext_resource type="Texture2D" path="res://assets/images/backgrounds/streak.png" id="streak"]
+[ext_resource type="Script" uid="uid://c2hb60tp6c5cc" path="res://scripts/world/space_background.gd" id="bg"]
+[ext_resource type="Texture2D" uid="uid://jsa1pa7om4m5" path="res://assets/images/backgrounds/bg_nebula_1.jpg" id="bg_nebula_1"]
+[ext_resource type="Texture2D" uid="uid://cte5kf044nxtp" path="res://assets/images/backgrounds/bg_nebula_3.jpg" id="bg_nebula_3"]
+[ext_resource type="Texture2D" uid="uid://dun0mpo2fe1a3" path="res://assets/images/backgrounds/bg_nebula_4.jpg" id="bg_nebula_4"]
+[ext_resource type="Script" uid="uid://bxxcmfgr5r4ai" path="res://scripts/world/scrolling_layer.gd" id="layer"]
+[ext_resource type="Texture2D" uid="uid://8sd8aocljhtb" path="res://assets/images/backgrounds/nebula_0.png" id="neb0"]
+[ext_resource type="Texture2D" uid="uid://lbwkmod0vdg3" path="res://assets/images/backgrounds/nebula_1.png" id="neb1"]
+[ext_resource type="Texture2D" uid="uid://b52kgk1rvuqlj" path="res://assets/images/backgrounds/nebula_2.png" id="neb2"]
+[ext_resource type="Script" uid="uid://bxegjxqmtkm72" path="res://scripts/world/space_props.gd" id="props"]
+[ext_resource type="Texture2D" uid="uid://cbhnhx1mwuea4" path="res://assets/images/backgrounds/star_far.png" id="star_far"]
+[ext_resource type="Texture2D" uid="uid://bdp1sq26pgto8" path="res://assets/images/backgrounds/star_mid.png" id="star_mid"]
+[ext_resource type="Texture2D" uid="uid://o31n27n7460u" path="res://assets/images/backgrounds/star_near.png" id="star_near"]
+[ext_resource type="Texture2D" uid="uid://bkps4dpyut3av" path="res://assets/images/backgrounds/streak.png" id="streak"]
+[ext_resource type="Script" uid="uid://y11vd6x5ixgv" path="res://scripts/world/streaks.gd" id="streaks"]
 
-[node name="SpaceBackground" type="Node2D"]
+[node name="SpaceBackground" type="Node2D" unique_id=986137084]
 script = ExtResource("bg")
 photos = Array[Texture2D]([ExtResource("bg_nebula_1"), ExtResource("bg_nebula_3"), ExtResource("bg_nebula_4")])
 
-[node name="Photo" type="Parallax2D" parent="."]
-z_index = -110
+[node name="Photo" type="Parallax2D" parent="." unique_id=82734884]
 modulate = Color(1, 1, 1, 0.8)
+z_index = -110
 script = ExtResource("layer")
-base_speed = 4
+parallax = 0.1
 fit_width = true
 
-[node name="Sprite" type="Sprite2D" parent="Photo"]
-centered = false
-scale = Vector2(1, 1)
+[node name="Sprite" type="Sprite2D" parent="Photo" unique_id=1636625931]
 texture = ExtResource("bg_nebula_1")
-
-[node name="StarFar" type="Parallax2D" parent="."]
-z_index = -100
-modulate = Color(1, 1, 1, 0.6)
-script = ExtResource("layer")
-base_speed = 8
-fit_width = false
-
-[node name="Sprite" type="Sprite2D" parent="StarFar"]
 centered = false
+
+[node name="StarFar" type="Parallax2D" parent="." unique_id=1450578037]
+modulate = Color(1, 1, 1, 0.6)
+z_index = -100
+script = ExtResource("layer")
+
+[node name="Sprite" type="Sprite2D" parent="StarFar" unique_id=45088235]
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("star_far")
-
-[node name="StarMid" type="Parallax2D" parent="."]
-z_index = -90
-modulate = Color(1, 1, 1, 0.75)
-script = ExtResource("layer")
-base_speed = 22
-fit_width = false
-
-[node name="Sprite" type="Sprite2D" parent="StarMid"]
 centered = false
+
+[node name="StarMid" type="Parallax2D" parent="." unique_id=1205157624]
+modulate = Color(1, 1, 1, 0.75)
+z_index = -90
+script = ExtResource("layer")
+parallax = 0.4
+
+[node name="Sprite" type="Sprite2D" parent="StarMid" unique_id=953684819]
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("star_mid")
-
-[node name="StarNear" type="Parallax2D" parent="."]
-z_index = -70
-modulate = Color(1, 1, 1, 0.8)
-script = ExtResource("layer")
-base_speed = 55
-fit_width = false
-
-[node name="Sprite" type="Sprite2D" parent="StarNear"]
 centered = false
+
+[node name="StarNear" type="Parallax2D" parent="." unique_id=2030441875]
+modulate = Color(1, 1, 1, 0.8)
+z_index = -70
+script = ExtResource("layer")
+parallax = 0.7
+
+[node name="Sprite" type="Sprite2D" parent="StarNear" unique_id=1139933079]
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("star_near")
+centered = false
 
-[node name="Props" type="Node2D" parent="."]
+[node name="Props" type="Node2D" parent="." unique_id=1862928382]
 z_index = -95
 script = ExtResource("props")
 nebulae = Array[Texture2D]([ExtResource("neb0"), ExtResource("neb1"), ExtResource("neb2")])
 
-[node name="Prop0" type="Sprite2D" parent="Props"]
+[node name="Prop0" type="Sprite2D" parent="Props" unique_id=476006731]
 visible = false
 
-[node name="Prop1" type="Sprite2D" parent="Props"]
+[node name="Prop1" type="Sprite2D" parent="Props" unique_id=1296965054]
 visible = false
 
-[node name="Prop2" type="Sprite2D" parent="Props"]
+[node name="Prop2" type="Sprite2D" parent="Props" unique_id=1575916164]
 visible = false
 
-[node name="Prop3" type="Sprite2D" parent="Props"]
+[node name="Prop3" type="Sprite2D" parent="Props" unique_id=1455226366]
 visible = false
 
-[node name="Streaks" type="Node2D" parent="."]
+[node name="Streaks" type="Node2D" parent="." unique_id=1044970103]
 z_index = -60
 script = ExtResource("streaks")
 
-[node name="Streak0" type="Sprite2D" parent="Streaks"]
+[node name="Streak0" type="Sprite2D" parent="Streaks" unique_id=2036644319]
 modulate = Color(1, 1, 1, 0.3)
+texture = ExtResource("streak")
 centered = false
 offset = Vector2(-1, -48)
-texture = ExtResource("streak")
 
-[node name="Streak1" type="Sprite2D" parent="Streaks"]
+[node name="Streak1" type="Sprite2D" parent="Streaks" unique_id=1999808249]
 modulate = Color(1, 1, 1, 0.3)
+texture = ExtResource("streak")
 centered = false
 offset = Vector2(-1, -48)
-texture = ExtResource("streak")
 
-[node name="Streak2" type="Sprite2D" parent="Streaks"]
+[node name="Streak2" type="Sprite2D" parent="Streaks" unique_id=1224627927]
 modulate = Color(1, 1, 1, 0.3)
+texture = ExtResource("streak")
 centered = false
 offset = Vector2(-1, -48)
-texture = ExtResource("streak")
 
-[node name="Streak3" type="Sprite2D" parent="Streaks"]
+[node name="Streak3" type="Sprite2D" parent="Streaks" unique_id=762514558]
 modulate = Color(1, 1, 1, 0.3)
+texture = ExtResource("streak")
 centered = false
 offset = Vector2(-1, -48)
-texture = ExtResource("streak")
 
-[node name="Streak4" type="Sprite2D" parent="Streaks"]
+[node name="Streak4" type="Sprite2D" parent="Streaks" unique_id=1440475258]
 modulate = Color(1, 1, 1, 0.3)
+texture = ExtResource("streak")
 centered = false
 offset = Vector2(-1, -48)
-texture = ExtResource("streak")
 
-[node name="Streak5" type="Sprite2D" parent="Streaks"]
+[node name="Streak5" type="Sprite2D" parent="Streaks" unique_id=262102865]
 modulate = Color(1, 1, 1, 0.3)
+texture = ExtResource("streak")
 centered = false
 offset = Vector2(-1, -48)
-texture = ExtResource("streak")
