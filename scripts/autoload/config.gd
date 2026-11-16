@@ -17,11 +17,11 @@ const ACTIVE_VIEW_MARGIN := 40.0 # ships this far outside the view still count a
 
 # --- player
 const PLAYER_LIVES := 3
-const PLAYER_HEALTH := 100.0
+const PLAYER_HEALTH := 200.0
 const PLAYER_EXTRA_LIFE_SCORE := 5000
 const PLAYER_SPEED := 200.0 # top speed
-const PLAYER_ACCELERATION := 500.0 # px/s^2 while a move key is held
-const PLAYER_DRIFT_DRAG := 30.0 # px/s^2 lost while coasting: from top speed it takes ~6.7 s to stop
+const PLAYER_ACCELERATION := 900.0 # px/s^2 while a move key is held
+const PLAYER_DRIFT_DRAG := 250.0 # px/s^2 lost while coasting: from top speed it takes ~0.8 s to stop
 const PLAYER_TURN_RATE := 540.0 # deg/s the ship turns toward its movement direction
 const PLAYER_BODY_SIZE := 24.0
 const PLAYER_BULLET_Y_OFFSET := -20.0
