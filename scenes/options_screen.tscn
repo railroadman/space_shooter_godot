@@ -1,0 +1,72 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/options_screen.gd" id="script"]
+[ext_resource type="PackedScene" path="res://scenes/space_background.tscn" id="background"]
+[ext_resource type="LabelSettings" path="res://resources/ui/title_label.tres" id="title_style"]
+[ext_resource type="LabelSettings" path="res://resources/ui/body_label.tres" id="body_style"]
+
+[node name="OptionsScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("script")
+
+[node name="Background" parent="." instance=ExtResource("background")]
+
+[node name="Box" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Title" type="Label" parent="Box"]
+layout_mode = 2
+label_settings = ExtResource("body_style")
+text = "OPTIONS"
+horizontal_alignment = 1
+
+[node name="Display" type="HBoxContainer" parent="Box"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 16
+
+[node name="Mode" type="Button" parent="Box/Display"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Resolution" type="Button" parent="Box/Display"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Grid" type="GridContainer" parent="Box"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+
+[node name="Controls" type="Label" parent="Box"]
+layout_mode = 2
+label_settings = ExtResource("body_style")
+text = "ARROWS / WASD  -  MOVE        MOUSE  -  AIM
+SPACE  -  FIRE        ESC  -  PAUSE"
+horizontal_alignment = 1
+
+[node name="Back" type="Button" parent="Box"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "BACK (ESC)"

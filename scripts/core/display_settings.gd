@@ -48,6 +48,7 @@ static func apply() -> void:
 
 static func save() -> void:
 	var file := ConfigFile.new()
+	file.load(PATH) # keep other sections (crosshair) of the same file
 	file.set_value(SECTION, "fullscreen", fullscreen)
 	file.set_value(SECTION, "resolution", resolution())
 	file.save(PATH)
